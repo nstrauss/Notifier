@@ -45,8 +45,16 @@ func openItem(globalOpenItem: [String]?, verboseMode: Bool) {
     openItem:
     do {
         let task = Process()
-        task.launchPath = "/usr/bin/open"
-        task.arguments = globalOpenItem
+        // If the target is an executable script then run that instead of calling open
+        let exts = [".pl", ".py", ".rb", ".sh", ".swift"]
+        let executablePath = globalOpenItem?[0] ?? ""
+        let fm = FileManager.default
+        if fm.isExecutableFile(atPath: executablePath) && exts.contains(where: executablePath.contains) {
+            task.launchPath = executablePath
+        } else {
+            task.launchPath = "/usr/bin/open"
+            task.arguments = globalOpenItem
+        }
         let outputPipe = Pipe()
         let errorPipe = Pipe()
         task.standardOutput = outputPipe

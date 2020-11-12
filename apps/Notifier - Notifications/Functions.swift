@@ -40,20 +40,28 @@ func gracefullLogout(verboseMode: Bool) {
 // Open the item passed, NSWorkspace was used but sometimes threw "app is not open errors"
 func openItem(globalOpenItem: [String]?, verboseMode: Bool) {
     if verboseMode {
-        NSLog("Notifier Log: banner - opening %@", String(describing: globalOpenItem))
+        NSLog("Notifier Log: alert - opening %@", String(describing: globalOpenItem))
     }
     openItem:
     do {
         let task = Process()
-        task.launchPath = "/usr/bin/open"
-        task.arguments = globalOpenItem
+        // If the target is an executable script then run that instead of calling open
+        let exts = [".pl", ".py", ".rb", ".sh", ".swift"]
+        let executablePath = globalOpenItem?[0] ?? ""
+        let fm = FileManager.default
+        if fm.isExecutableFile(atPath: executablePath) && exts.contains(where: executablePath.contains) {
+            task.launchPath = executablePath
+        } else {
+            task.launchPath = "/usr/bin/open"
+            task.arguments = globalOpenItem
+        }
         let outputPipe = Pipe()
         let errorPipe = Pipe()
         task.standardOutput = outputPipe
         task.standardError = errorPipe
         task.launch()
         if verboseMode {
-            NSLog("Notifier Log: banner - opened %@", String(describing: globalOpenItem))
+            NSLog("Notifier Log: alert - opened %@", String(describing: globalOpenItem))
         }
     }
 }
